@@ -1,0 +1,38 @@
+hash: 15be281cdc2a2f65792f03f316d63be64c764fb0f4d9be0e458e8ea49df56114
+updated: 2018-01-30T14:55:00.558055683+08:00
+imports:
+- name: github.com/aws/aws-sdk-go-v2
+  version: b8e7febd4b80c6517240e473410b54d4e63fed1d
+  subpackages:
+  - aws
+  - aws/awserr
+  - aws/defaults
+  - aws/ec2metadata
+  - aws/ec2rolecreds
+  - aws/endpointcreds
+  - aws/endpoints
+  - aws/external
+  - aws/signer/v4
+  - aws/stscreds
+  - internal/awsutil
+  - internal/sdk
+  - private/protocol
+  - private/protocol/json/jsonutil
+  - private/protocol/jsonrpc
+  - private/protocol/query
+  - private/protocol/query/queryutil
+  - private/protocol/rest
+  - private/protocol/xml/xmlutil
+  - service/ecs
+  - service/sts
+- name: github.com/go-ini/ini
+  version: 32e4c1e6bc4e7d0d8451aa6b75200d19e37a536a
+- name: github.com/jmespath/go-jmespath
+  version: dd801d4f4ce7ac746e7e7b4489d2fa600b3b096b
+- name: github.com/joho/godotenv
+  version: a79fa1e548e2c689c241d10173efd51e5d689d5b
+  subpackages:
+  - autoload
+- name: github.com/urfave/cli
+  version: cfb38830724cc34fedffe9a2a29fb54fa9169cd1
+testImports: []
