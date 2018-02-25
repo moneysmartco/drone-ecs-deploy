@@ -27,7 +27,7 @@ Execute from the working directory:
 
 ```sh
 AWS_ACCESS_KEY_ID=xxxx \
-AWS_SECRET_KEY=xxxx \
+AWS_SECRET_ACCESS_KEY=xxxx \
 PLUGIN_CLUSTER=ecs-cluster \
 PLUGIN_SERVICE=ecs-service \
 PLUGIN_AWS_REGION=ap-southeast-1 \

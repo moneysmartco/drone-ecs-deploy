@@ -20,7 +20,7 @@ pipeline:
     image_name: xxx.dkr.ecr.xxx.amazonaws.com/simple_app:${DRONE_COMMIT:0:8}
     secrets:
       - aws_access_key_id
-      - aws_secret_key
+      - aws_secret_access_key
 ```
 
 # Parameter Reference
@@ -45,6 +45,6 @@ image_name
 aws_access_key_id
 : AWS access to update ECS service
 
-aws_secret_key
+aws_secret_access_key
 : AWS access to update ECS service
 
