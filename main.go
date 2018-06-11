@@ -17,7 +17,7 @@ var Version string
 
 func main() {
 	if Version == "" {
-		Version = fmt.Sprintf("0.0.1+%s", build)
+		Version = fmt.Sprintf("0.0.2+%s", build)
 	}
 
 	app := cli.NewApp()
@@ -58,6 +58,23 @@ func main() {
 			Usage:  "Path to save the dotenv file",
 			EnvVar: "PLUGIN_DEPLOY_ENV_PATH",
 			Value:  ".deploy.env",
+		},
+		cli.BoolFlag{
+			Name:   "polling-check-enable",
+			Usage:  "Enable checking on removing old task definition (default: false)",
+			EnvVar: "PLUGIN_POLLING_CHECK_ENABLE",
+		},
+		cli.IntFlag{
+			Name:   "polling-interval",
+			Usage:  "Interval for ensuring old task definition is replaced (default: 10 sec)",
+			EnvVar: "PLUGIN_POLLING_INTERVAL",
+			Value:  10,
+		},
+		cli.IntFlag{
+			Name:   "polling-timeout",
+			Usage:  "Timeout for ensuring old task definition is replaced (default: 10 mins)",
+			EnvVar: "PLUGIN_POLLING_TIMEOUT",
+			Value:  600,
 		},
 		cli.StringFlag{
 			Name:  "env-file",
@@ -104,11 +121,14 @@ func run(c *cli.Context) error {
 
 	plugin := Plugin{
 		Config: Config{
-			Cluster:       c.String("cluster"),
-			Service:       c.String("service"),
-			AwsRegion:     c.String("aws_region"),
-			ImageName:     c.String("image_name"),
-			DeployEnvPath: c.String("deploy-env-path"),
+			Cluster:            c.String("cluster"),
+			Service:            c.String("service"),
+			AwsRegion:          c.String("aws_region"),
+			ImageName:          c.String("image_name"),
+			DeployEnvPath:      c.String("deploy-env-path"),
+			PollingCheckEnable: c.Bool("polling-check-enable"),
+			PollingInterval:    c.Int("polling-interval"),
+			PollingTimeout:     c.Int("polling-timeout"),
 		},
 	}
 

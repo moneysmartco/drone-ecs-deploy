@@ -1,7 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
@@ -12,11 +15,14 @@ import (
 type (
 	// Config for the plugin.
 	Config struct {
-		Cluster       string
-		Service       string
-		AwsRegion     string
-		ImageName     string
-		DeployEnvPath string
+		Cluster            string
+		Service            string
+		AwsRegion          string
+		ImageName          string
+		DeployEnvPath      string
+		PollingCheckEnable bool
+		PollingInterval    int
+		PollingTimeout     int
 	}
 
 	// Plugin structure
@@ -84,6 +90,48 @@ func (p Plugin) updateTaskDefinition(ecsSvc *ecs.ECS, taskDef *ecs.TaskDefinitio
 	return
 }
 
+func (p Plugin) waitDeploymentUntilFinish(ecsSvc *ecs.ECS, ecs_cluster string, ecs_service string, targetTaskDefinition string, interval int, timeout int) (err error) {
+	fmt.Printf("\nWait for deployment...\n")
+	deploySuccess := false
+	start_ts := time.Now()
+
+	// Looping and check till old TaskDef removed
+	for {
+		ecsReq := ecsSvc.DescribeServicesRequest(&ecs.DescribeServicesInput{
+			Cluster: aws.String(ecs_cluster),
+			Services: []string{
+				ecs_service,
+			},
+		})
+		ecsInfo, err := ecsReq.Send()
+		if err != nil {
+			return err
+		}
+
+		if len(ecsInfo.Services[0].Deployments) == 1 &&
+			strings.Compare(*ecsInfo.Services[0].Deployments[0].TaskDefinition, targetTaskDefinition) == 0 {
+
+			deploySuccess = true
+			break
+		}
+
+		time.Sleep(time.Duration(interval) * time.Second)
+		end_ts := time.Now()
+		fmt.Printf("Time elapsed: %v\n", end_ts.Sub(start_ts))
+
+		if end_ts.Sub(start_ts) > time.Duration(timeout)*time.Second {
+			fmt.Printf("Timeout and abort.\n")
+			break
+		}
+	}
+
+	if deploySuccess == false {
+		return errors.New("Deployment timeout")
+	}
+
+	return
+}
+
 // Exec executes the plugin.
 func (p Plugin) Exec() (err error) {
 	fmt.Println("============================")
@@ -142,8 +190,23 @@ func (p Plugin) Exec() (err error) {
 	if err != nil {
 		return err
 	}
-
 	fmt.Println("Deployed version: ", *updateSvcOutput.Service.TaskDefinition)
+
+	// Polling until finish
+	if p.Config.PollingCheckEnable {
+		err := p.waitDeploymentUntilFinish(
+			ecsSvc,
+			p.Config.Cluster,
+			p.Config.Service,
+			*updateSvcOutput.Service.TaskDefinition,
+			p.Config.PollingInterval,
+			p.Config.PollingTimeout,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
 	fmt.Println("======================")
 	fmt.Println("= Deploy is finished =")
 	fmt.Println("======================")
