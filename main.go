@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -17,7 +18,7 @@ var Version string
 
 func main() {
 	if Version == "" {
-		Version = fmt.Sprintf("0.0.2+%s", build)
+		Version = fmt.Sprintf("0.0.3+%s", build)
 	}
 
 	app := cli.NewApp()
@@ -58,6 +59,11 @@ func main() {
 			Usage:  "Path to save the dotenv file",
 			EnvVar: "PLUGIN_DEPLOY_ENV_PATH",
 			Value:  ".deploy.env",
+		},
+		cli.StringFlag{
+			Name:   "custom-envs",
+			Usage:  "Custom environment variables for add / overwrite",
+			EnvVar: "PLUGIN_CUSTOM_ENVS,PLUGIN_CUSTOM_ENV",
 		},
 		cli.BoolFlag{
 			Name:   "polling-check-enable",
@@ -119,6 +125,13 @@ func run(c *cli.Context) error {
 		_ = godotenv.Load(c.String("env-file"))
 	}
 
+	var customEnvs map[string]string
+	if c.String("custom-envs") != "" {
+		if err := json.Unmarshal([]byte(c.String("custom-envs")), &customEnvs); err != nil {
+			panic(err)
+		}
+	}
+
 	plugin := Plugin{
 		Config: Config{
 			Cluster:            c.String("cluster"),
@@ -126,6 +139,7 @@ func run(c *cli.Context) error {
 			AwsRegion:          c.String("aws_region"),
 			ImageName:          c.String("image_name"),
 			DeployEnvPath:      c.String("deploy-env-path"),
+			CustomEnvs:         customEnvs,
 			PollingCheckEnable: c.Bool("polling-check-enable"),
 			PollingInterval:    c.Int("polling-interval"),
 			PollingTimeout:     c.Int("polling-timeout"),
