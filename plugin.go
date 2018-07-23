@@ -20,6 +20,7 @@ type (
 		AwsRegion          string
 		ImageName          string
 		DeployEnvPath      string
+		CustomEnvs         map[string]string
 		PollingCheckEnable bool
 		PollingInterval    int
 		PollingTimeout     int
@@ -31,10 +32,16 @@ type (
 	}
 )
 
-func (p Plugin) readDotEnv() (envVarMap []ecs.KeyValuePair, err error) {
+func (p Plugin) readEnv() (envVarMap []ecs.KeyValuePair, err error) {
+	// Read from dotenv file
 	envMap, err := godotenv.Read(p.Config.DeployEnvPath)
 	if err != nil {
 		return
+	}
+
+	// Add or Update from CustomEnvs
+	for k, v := range p.Config.CustomEnvs {
+		envMap[strings.ToUpper(k)] = v
 	}
 
 	for k, v := range envMap {
@@ -60,7 +67,7 @@ func (p Plugin) getTaskDefinitionDetail(ecsSvc *ecs.ECS, taskDefName *string) (t
 }
 
 func (p Plugin) updateTaskDefinition(ecsSvc *ecs.ECS, taskDef *ecs.TaskDefinition) (updatedTaskDef *ecs.TaskDefinition, err error) {
-	envs, err := p.readDotEnv()
+	envs, err := p.readEnv()
 	if err != nil {
 		return
 	}
@@ -81,6 +88,7 @@ func (p Plugin) updateTaskDefinition(ecsSvc *ecs.ECS, taskDef *ecs.TaskDefinitio
 		TaskRoleArn:             taskDef.TaskRoleArn,
 		Volumes:                 taskDef.Volumes,
 	})
+
 	newTaskDefOutput, err := createTaskDefReq.Send()
 	if err != nil {
 		return nil, err
