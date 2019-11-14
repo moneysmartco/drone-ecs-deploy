@@ -82,6 +82,23 @@ func main() {
 			EnvVar: "PLUGIN_POLLING_TIMEOUT",
 			Value:  600,
 		},
+		cli.BoolFlag{
+			Name:   "custom-resource-limit-enable",
+			Usage:  "Customize CPU and memory limit (default: false)",
+			EnvVar: "PLUGIN_CUSTOM_RESOURCE_LIMIT_ENABLE",
+		},
+		cli.IntFlag{
+			Name:   "cpu-limit",
+			Usage:  "The number of cpu units reserved for the container. (default: 512)",
+			EnvVar: "PLUGIN_CPU_LIMIT",
+			Value:  512,
+		},
+		cli.IntFlag{
+			Name:   "memory-limit",
+			Usage:  "The hard limit (in MiB) of memory to present to the container. (default: 512)",
+			EnvVar: "PLUGIN_MEMORY_LIMIT",
+			Value:  512,
+		},
 		cli.StringFlag{
 			Name:  "env-file",
 			Usage: "source env file",
@@ -134,15 +151,18 @@ func run(c *cli.Context) error {
 
 	plugin := Plugin{
 		Config: Config{
-			Cluster:            c.String("cluster"),
-			Service:            c.String("service"),
-			AwsRegion:          c.String("aws_region"),
-			ImageName:          c.String("image_name"),
-			DeployEnvPath:      c.String("deploy-env-path"),
-			CustomEnvs:         customEnvs,
-			PollingCheckEnable: c.Bool("polling-check-enable"),
-			PollingInterval:    c.Int("polling-interval"),
-			PollingTimeout:     c.Int("polling-timeout"),
+			Cluster:                   c.String("cluster"),
+			Service:                   c.String("service"),
+			AwsRegion:                 c.String("aws_region"),
+			ImageName:                 c.String("image_name"),
+			DeployEnvPath:             c.String("deploy-env-path"),
+			CustomEnvs:                customEnvs,
+			PollingCheckEnable:        c.Bool("polling-check-enable"),
+			PollingInterval:           c.Int("polling-interval"),
+			PollingTimeout:            c.Int("polling-timeout"),
+			CustomResourceLimitEnable: c.Bool("custom-resource-limit-enable"),
+			CPULimit:                  c.Int64("cpu-limit"),
+			MemoryLimit:               c.Int64("memory-limit"),
 		},
 	}
 

@@ -33,6 +33,9 @@ PLUGIN_SERVICE=ecs-service \
 PLUGIN_AWS_REGION=ap-southeast-1 \
 PLUGIN_POLLING_CHECK_ENABLE=true \
 PLUGIN_CUSTOM_ENVS='{"foo": "BAR"}' \
+PLUGIN_CUSTOM_RESOURCE_LIMIT_ENABLE=true \
+PLUGIN_CPU_LIMIT=512 \
+PLUGIN_MEMORY_LIMIT=512 \
 PLUGIN_IMAGE_NAME=xxxx.dkr.ecr.xxx.amazon.com/simple_app:latest \
   ./drone-ecs-deploy
 ```
