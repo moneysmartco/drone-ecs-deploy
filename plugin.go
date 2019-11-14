@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -15,15 +16,18 @@ import (
 type (
 	// Config for the plugin.
 	Config struct {
-		Cluster            string
-		Service            string
-		AwsRegion          string
-		ImageName          string
-		DeployEnvPath      string
-		CustomEnvs         map[string]string
-		PollingCheckEnable bool
-		PollingInterval    int
-		PollingTimeout     int
+		Cluster                   string
+		Service                   string
+		AwsRegion                 string
+		ImageName                 string
+		DeployEnvPath             string
+		CustomEnvs                map[string]string
+		PollingCheckEnable        bool
+		PollingInterval           int
+		PollingTimeout            int
+		CustomResourceLimitEnable bool
+		CPULimit                  int64
+		MemoryLimit               int64
 	}
 
 	// Plugin structure
@@ -76,12 +80,28 @@ func (p Plugin) updateTaskDefinition(ecsSvc *ecs.ECS, taskDef *ecs.TaskDefinitio
 	updatedContainerDef[0].Image = aws.String(p.Config.ImageName)
 	updatedContainerDef[0].Environment = envs
 
+	var taskDefCPULimit *string
+	var taskDefMemoryLimit *string
+	if !p.Config.CustomResourceLimitEnable {
+		// Task Definition
+		taskDefCPULimit = taskDef.Cpu
+		taskDefMemoryLimit = taskDef.Memory
+	} else {
+		// Task Definition
+		taskDefCPULimit = aws.String(strconv.FormatInt(p.Config.CPULimit, 10))
+		taskDefMemoryLimit = aws.String(strconv.FormatInt(p.Config.MemoryLimit, 10))
+
+		// Container Definition
+		updatedContainerDef[0].Cpu = &p.Config.CPULimit
+		updatedContainerDef[0].Memory = &p.Config.MemoryLimit
+	}
+
 	createTaskDefReq := ecsSvc.RegisterTaskDefinitionRequest(&ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions:    updatedContainerDef,
-		Cpu:                     taskDef.Cpu,
+		Cpu:                     taskDefCPULimit,
 		ExecutionRoleArn:        taskDef.ExecutionRoleArn,
 		Family:                  taskDef.Family,
-		Memory:                  taskDef.Memory,
+		Memory:                  taskDefMemoryLimit,
 		NetworkMode:             taskDef.NetworkMode,
 		PlacementConstraints:    taskDef.PlacementConstraints,
 		RequiresCompatibilities: taskDef.RequiresCompatibilities,
@@ -180,6 +200,9 @@ func (p Plugin) Exec() (err error) {
 	}
 
 	fmt.Println("Current Task Definition ARN: ", *taskDef.TaskDefinitionArn)
+	fmt.Println(fmt.Sprintf("- CPU: %s", *taskDef.Cpu))
+	fmt.Println(fmt.Sprintf("- Memory: %s MiB", *taskDef.Memory))
+
 	updatedTaskDef, err := p.updateTaskDefinition(ecsSvc, taskDef)
 	if err != nil {
 		return
@@ -193,12 +216,14 @@ func (p Plugin) Exec() (err error) {
 		DesiredCount:   currentCount,
 	})
 
-	fmt.Println("Updating with new Task Definition...")
+	fmt.Println("\n= Updating with new Task Definition...")
 	updateSvcOutput, err := updateSvcReq.Send()
 	if err != nil {
 		return err
 	}
 	fmt.Println("Deployed version: ", *updateSvcOutput.Service.TaskDefinition)
+	fmt.Println(fmt.Sprintf("- CPU: %s", *updatedTaskDef.Cpu))
+	fmt.Println(fmt.Sprintf("- Memory: %s MiB", *updatedTaskDef.Memory))
 
 	// Polling until finish
 	if p.Config.PollingCheckEnable {

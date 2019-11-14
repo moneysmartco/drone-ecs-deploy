@@ -18,6 +18,9 @@ pipeline:
     aws_region: ap-southeast-1
     deploy_env_path: ./.deploy.env
     image_name: xxx.dkr.ecr.xxx.amazonaws.com/simple_app:${DRONE_COMMIT:0:8}
+    custom_resource_limit_enable: true
+    cpu_limit: 512
+    memory_limit: 512
     secrets:
       - aws_access_key_id
       - aws_secret_access_key
@@ -39,6 +42,15 @@ deploy_env_path
 
 image_name
 : Docker image to be deployed on ECS service
+
+custom_resource_limit_enable
+: Customize CPU and memory limit (default: false)
+
+cpu_limit
+: The number of cpu units reserved for the container. (default: 512)
+
+memory_limit
+: The hard limit (in MiB) of memory to present to the container. (default: 512)
 
 # Secret Reference
 
