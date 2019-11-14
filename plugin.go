@@ -134,7 +134,7 @@ func (p Plugin) waitDeploymentUntilFinish(ecsSvc *ecs.ECS, ecs_cluster string, e
 	}
 
 	if deploySuccess == false {
-		return errors.New("Deployment timeout")
+		return errors.New("deployment timeout, please check application log")
 	}
 
 	return
