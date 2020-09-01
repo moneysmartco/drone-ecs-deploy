@@ -19,8 +19,8 @@ pipeline:
     deploy_env_path: ./.deploy.env
     image_name: xxx.dkr.ecr.xxx.amazonaws.com/simple_app:${DRONE_COMMIT:0:8}
     custom_resource_limit_enable: true
-    cpu_limit: 512
-    memory_limit: 512
+    cpu_limit: 1024
+    memory_limit: 1024
     secrets:
       - aws_access_key_id
       - aws_secret_access_key
